@@ -8,6 +8,9 @@ var {User} = require('./models/user');
 var app = express();
 
 var port = process.env.PORT || 3000;
+app.get('/',(req,res) => {
+	res.send({text : "hello world"});
+});
 /*
 app.use(bodyParser.json());
 
