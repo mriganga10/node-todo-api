@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 const validator = require('validator');
 const jwt = require('jsonwebtoken');
 const _ = require('lodash');
-const bcrypt = require('bcryptjs')
+const bcrypt = require('bcryptjs');
 
 var UserSchema = new mongoose.Schema({
   email: {
@@ -49,7 +49,7 @@ UserSchema.pre('save',function (next){
 	}
 });
 
-UserSchema.methods.toJSON = function () { //schema method
+UserSchema.methods.toJSON = function () { //schema method //user to show only email and _id in the response in postman
   var user = this;
   var userObject = user.toObject();
   return _.pick(userObject, ['_id', 'email']);
@@ -84,6 +84,45 @@ UserSchema.statics.findByToken = function (token) { //model method
   });
 };
 
+UserSchema.methods.removeToken = function (token) {
+  var user = this;
+  console.log('hello');
+  console.log(user);
+  return user.update({
+    $pull: {
+      tokens: {token}
+    }
+  });
+};
+UserSchema.statics.findById = function(_id){
+  var User = this;
+  return User.findOne({_id}).then((user)=> {
+         return new Promise((resolve,reject) => {
+            resolve(user);
+         });
+  });
+};
+UserSchema.statics.findByCredentials = function (email,password){
+	var User = this;
+	//note User.findOne({email})) and user are two different things;
+	return User.findOne({email}).then((user) => {
+		if(!user){
+		return Promise.reject();
+		}
+		else{
+			return new Promise((resolve,reject) => {
+				bcrypt.compare(password, user.password, (err,res) => {
+		  			if(res === true){
+		  				resolve(user);
+		  			}
+		  			else{
+		  				reject(); 
+		  			}
+				});
+			});
+		}
+	});
+};
 
 var User = mongoose.model('User', UserSchema);
 
